@@ -55,16 +55,19 @@ public class DoesRandomEdgesLeadToPoissonDistribution {
         for (int count : neighborCounts) {
             histogramOfNeighorCounts[count] += 1;
         }
-        for (int histoValue : histogramOfNeighorCounts) {
-            System.err.println(histoValue);
-        }
         // plot it against the corresponding poisson
         // (mean of the poisson is also its lambda parameter, so we take the averageNeighborCount)
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         { // fill the graph data
+            System.out.println("# numberOfNeighbors probaFromStat probaFromPoisson");
+            System.out.println("# to plot the two (almost identical) distributions, use:");
+            System.out.println("#   gnuplot -e 'plot \"statsVsPoisson.data\" using 0:2, \"statsVsPoisson.data\" using 1:2; pause -1'");
             for (int i = 0; i < histogramOfNeighorCounts.length; i++) {
-                dataset.addValue(histogramOfNeighorCounts[i] / (double) (netSize), "Stat", "" + i);
-                dataset.addValue(Distributions.poissonPmf(averageNeighborCount, i), "Poisson", "" + i);
+                double vStat = histogramOfNeighorCounts[i] / (double) (netSize);
+                double vPoisson = Distributions.poissonPmf(averageNeighborCount, i);
+                dataset.addValue(vStat, "Stat", "" + i);
+                dataset.addValue(vPoisson, "Poisson", "" + i);
+                System.out.println(i + " " + vStat + " " + vPoisson);
             }
         }
         JFreeChart chart;
