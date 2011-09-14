@@ -46,7 +46,7 @@ public class NetworkWithNeighboringStateCount<STATE extends Enum<STATE>> {
         }
 
     }
-    public double countNeighbors(Node n, STATE state) {
+    public int countNeighbors(Node n, STATE state) {
         return ((NodeImpl) n).neighborCounts[state.ordinal()];
     }
     public STATE currentState(Node n) {
