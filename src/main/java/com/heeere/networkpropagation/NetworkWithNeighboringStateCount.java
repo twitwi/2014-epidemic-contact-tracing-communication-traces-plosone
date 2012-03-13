@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.heeere.networkpropagation;
 
 import java.util.ArrayList;
@@ -19,17 +18,21 @@ import java.util.Map;
 public class NetworkWithNeighboringStateCount<STATE extends Enum<STATE>> {
 
     /**
-     * This needs to be called if the network is not bidirectional and if node states have been changed.
+     * This needs to be called if the network is not bidirectional and if node
+     * states have been changed.
      */
     public void updateAllCounts() {
         for (Node node : nodes) {
-            ((NodeImpl)node).updateCounts();
+            ((NodeImpl) node).updateCounts();
         }
     }
 
     private class NodeImpl implements Node {
+
         STATE currentState;
-        int[/*STATE*/] neighborCounts = null;
+        int[/*
+                 * STATE
+                 */] neighborCounts = null;
 
         public void setCurrentState(STATE currentState) {
             this.currentState = currentState;
@@ -44,14 +47,16 @@ public class NetworkWithNeighboringStateCount<STATE extends Enum<STATE>> {
                 neighborCounts[n.currentState.ordinal()]++;
             }
         }
-
     }
+
     public int countNeighbors(Node n, STATE state) {
         return ((NodeImpl) n).neighborCounts[state.ordinal()];
     }
+
     public STATE currentState(Node n) {
         return ((NodeImpl) n).currentState;
     }
+
     public void changeNodeState(Node n, STATE state) {
         NodeImpl nn = (NodeImpl) n;
         nn.setCurrentState(state);
@@ -59,19 +64,21 @@ public class NetworkWithNeighboringStateCount<STATE extends Enum<STATE>> {
             neighbor.updateCounts();
         }
     }
+
     public void initAllNodes(STATE state) {
         for (Node node : nodes) {
             ((NodeImpl) node).setCurrentState(state);
         }
         updateAllCounts();
     }
-
     ArrayList<Node> nodes = new ArrayList<Node>();
+
     public Node addNode() {
         Node res = new NodeImpl();
         nodes.add(res);
         return res;
     }
+
     public Iterable<Node> nodes() {
         return nodes;
     }
@@ -83,6 +90,7 @@ public class NetworkWithNeighboringStateCount<STATE extends Enum<STATE>> {
         }
         return registerLink((NodeImpl) n1, (NodeImpl) n2) + registerLink((NodeImpl) n2, (NodeImpl) n1);
     }
+
     public void removeBidirectionalLink(Node n1, Node n2) {
         unregisterLink((NodeImpl) n1, (NodeImpl) n2);
         unregisterLink((NodeImpl) n2, (NodeImpl) n1);
@@ -109,6 +117,25 @@ public class NetworkWithNeighboringStateCount<STATE extends Enum<STATE>> {
         return l;
     }
 
+    public Iterable<? extends Node> getNeighbors(Node n) {
+        List<? extends Node> l = links.get((NodeImpl) n);
+        if (l == null) {
+            l = Collections.emptyList();
+        }
+        return l;
+    }
+
+        public void removeBidirectionalLinkSilently(Node n1, Node n2) {
+        unregisterLinkSilently((NodeImpl) n1, (NodeImpl) n2);
+        unregisterLinkSilently((NodeImpl) n2, (NodeImpl) n1);
+    }
+    private void unregisterLinkSilently(NodeImpl n1, NodeImpl n2) {
+        List<NodeImpl> l = links.get(n1);
+        if (l == null || !l.remove(n2)) {
+            System.err.println("WARNING: removing an unexisting link");
+        }
+    }
+
     private void unregisterLink(NodeImpl n1, NodeImpl n2) {
         List<NodeImpl> l = links.get(n1);
         if (l == null || !l.remove(n2)) {
@@ -116,6 +143,5 @@ public class NetworkWithNeighboringStateCount<STATE extends Enum<STATE>> {
         }
         n1.updateCounts();
     }
-
     Map<NodeImpl, List<NodeImpl>> links = new HashMap<NodeImpl, List<NodeImpl>>();
 }

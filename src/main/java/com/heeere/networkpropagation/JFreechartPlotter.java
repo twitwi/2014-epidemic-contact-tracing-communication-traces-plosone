@@ -86,7 +86,7 @@ public class JFreechartPlotter implements Plotter {
         }
         if (!seriesToSum.isEmpty()) {
             if (out != null) {
-                out.format(Locale.US, "params: %f %f %f %f %d %d\n", alpha, betaRandom, betaTraced, gamma, netSize, averageNeighborCount);
+                out.format(Locale.US, "# params: %f %f %f %f %d %d\n", alpha, betaRandom, betaTraced, gamma, netSize, averageNeighborCount);
             }
             double maxTime = Double.NEGATIVE_INFINITY;
             for (double[][] ser : seriesToSum) {
@@ -157,7 +157,7 @@ public class JFreechartPlotter implements Plotter {
             chain.statusAtTime(time, nI, totalInfected);
         }
         elementPairs.add(time);
-        elementPairs.add((double) totalInfected); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        elementPairs.add((double) nI); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
 
     @Override
