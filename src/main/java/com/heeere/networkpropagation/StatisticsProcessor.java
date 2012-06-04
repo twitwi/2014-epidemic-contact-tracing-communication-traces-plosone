@@ -6,13 +6,8 @@ package com.heeere.networkpropagation;
 
 import com.heeere.networkpropagation.AppTwoNetworks.Parameters;
 import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
 
 /**
  *
@@ -85,21 +80,22 @@ class StatisticsProcessor {
 
         seriesToSum.clear();
 
-        out.format("average-infected %a %d", maxTime, split);
+        out.format("average-infected %g %d", maxTime, split);
         for (int j = 0; j < split; j++) {
-            out.format(" %a", average[1][j]);
+            out.format(" %g", average[1][j]);
         }
         out.println();
 
-        out.format("average-max-infected %a", averageMax);
+        out.format("average-max-infected %g%n", averageMax);
 
-        out.format("average-total-infected %a %d", maxTime, split);
+        out.format("average-total-infected %g %d", maxTime, split);
         for (int j = 0; j < split; j++) {
-            out.format(" %a", average[2][j]);
+            out.format(" %g", average[2][j]);
         }
         out.println();
 
-        out.format("time-in-each-nInfected", average);
-        out.println();
+        //out.format("time-in-each-nInfected %d%n", average);
+        //out.println();
     }
+    
 }
