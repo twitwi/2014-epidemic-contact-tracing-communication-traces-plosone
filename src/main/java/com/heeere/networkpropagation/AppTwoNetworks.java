@@ -47,30 +47,35 @@ public class AppTwoNetworks {
         }
     }
 
-    public static class Results {
-    }
-
-    public static void main1(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
+        if (args.length == 0) {
+            mainHardCoded(args);
+            return;
+        }
+        if (args.length != 10) {
+            System.err.println("Expected 10 parameters exactly");
+            return;
+        }
         ParameterReader r = new ParameterReader(args);
         Parameters p = new Parameters(
                 r.d(), r.d(), r.d(), r.d(), r.i(), r.d(), r.d(), r.d(), r.i(), r.i());
         doIt(p, true);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void mainHardCoded(String[] args) throws IOException {
 
         final double alpha = .1;
         final double betaRandom = 0.02;
-        //final double betaTraced = 1.25;
+        final double betaTraced = .1;
         final double gamma = .5;
-        final int netSize = 200;
-        final int averageNeighborCount = 10;
-        final int averageNeighborCountToAdd = 2; // addition
-        final int averageNeighborCountToRemove = 4; // removal
+        final int netSize = 1000;
+        final double averageNeighborCount = 10;
+        final double averageNeighborCountToAdd = 0; // addition
+        final double averageNeighborCountToRemove = 0; // removal
         final int nNetwork = 10;
         final int nIterations = 20;
 
-        Parameters p = new Parameters(.1, .02, 1.25, .5, 200, 10, 2, 4, 10, 20);
+        Parameters p = new Parameters(alpha, betaRandom, betaTraced, gamma, netSize, averageNeighborCount, averageNeighborCountToAdd, averageNeighborCountToRemove, nNetwork, nIterations);
         doIt(p, true);
 
     }
