@@ -13,11 +13,11 @@ public class AppSimple {
     }
     public static void main(String[] args) throws IOException {
 
-        final double alpha = .1;
+        final double alpha = .05;
         final double betaRandom = 0.02;
-        final double betaTraced = 1.25;
+        final double betaTraced = .1;
         final double gamma = .5;
-        final int netSize = 1000;
+        final int netSize = 250;
         final int averageNeighborCount = 10;
 
         Plotter l = new JFreechartPlotter(null, null);

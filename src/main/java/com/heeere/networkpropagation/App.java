@@ -18,12 +18,12 @@ public class App {
         final double betaRandom = 0.02;
         //final double betaTraced = 1.25;
         final double gamma = .5;
-        final int netSize = 1000;
+        final int netSize = 200;
         final int averageNeighborCount = 10;
-        final int nNetwork = 20;
+        final int nNetwork = 10;
         final int nIterations = 30;
 
-        Plotter l = new JFreechartPlotter(new File("/tmp/testtttt.plot"), null);
+        Plotter l = new JFreechartPlotter(new File("/tmp/testtttt-fast2.plot"), null);
 
         for (double betaTraced = 0; betaTraced  <= 2.5; betaTraced += .1) {
             for (int iNetwork = 0; iNetwork < nNetwork; iNetwork++) {
