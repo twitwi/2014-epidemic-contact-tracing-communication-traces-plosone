@@ -20,11 +20,13 @@ class StatisticsProcessor {
         final double time;
         final int nInfected;
         final int nTotalInfected;
+        final int nTotalTraced;
 
-        public Event(double time, int nInfected, int nTotalInfected) {
+        public Event(double time, int nInfected, int nTotalInfected, int nTotalTraced) {
             this.time = time;
             this.nInfected = nInfected;
             this.nTotalInfected = nTotalInfected;
+            this.nTotalTraced = nTotalTraced;
         }
     }
     private ArrayList<Event> elementPairs;
@@ -36,8 +38,8 @@ class StatisticsProcessor {
         elementPairs = new ArrayList<Event>();
     }
 
-    public void statusAtTime(double time, int nI, int totalInfected) {
-        elementPairs.add(new Event(time, nI, totalInfected));
+    public void statusAtTime(double time, int nI, int totalInfected, int totalTraced) {
+        elementPairs.add(new Event(time, nI, totalInfected, totalTraced));
     }
 
     public void endIter() {
@@ -53,7 +55,7 @@ class StatisticsProcessor {
         int split = 1000;
 
         double averageMax = 0;
-        final double[][] average = new double[3][split];
+        final double[][] average = new double[4][split]; // time nInfected nTotalInfected nTotalTraced
         for (int i = 0; i < split; i++) {
             average[0][i] = maxTime * i / split;
         }
@@ -69,12 +71,14 @@ class StatisticsProcessor {
                 }
                 average[1][j] += ser.get(serI - 1).nInfected;
                 average[2][j] += ser.get(serI - 1).nTotalInfected;
+                average[3][j] += ser.get(serI - 1).nTotalTraced;
             }
             averageMax += thisMax;
         }
         for (int j = 0; j < average[0].length; j++) {
             average[1][j] /= seriesToSum.size();
             average[2][j] /= seriesToSum.size();
+            average[3][j] /= seriesToSum.size();
             averageMax /= seriesToSum.size();
         }
 
@@ -91,6 +95,12 @@ class StatisticsProcessor {
         out.format("average-total-infected %g %d", maxTime, split);
         for (int j = 0; j < split; j++) {
             out.format(" %g", average[2][j]);
+        }
+        out.println();
+
+        out.format("average-total-traced %g %d", maxTime, split);
+        for (int j = 0; j < split; j++) {
+            out.format(" %g", average[3][j]);
         }
         out.println();
 

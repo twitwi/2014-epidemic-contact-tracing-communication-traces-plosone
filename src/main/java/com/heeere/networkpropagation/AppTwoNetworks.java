@@ -162,6 +162,7 @@ public class AppTwoNetworks {
                 knownNetwork.changeNodeState(knownNodes[0], State.I);
                 int nI = 1;
                 int totalInfected = 1;
+                int totalTraced = 0;
                 Simulation<State> simu1 = new Simulation(network, transitions);
                 Simulation<State> simu2 = new Simulation(knownNetwork, tracingTransitions);
                 while (true) {
@@ -187,11 +188,14 @@ public class AppTwoNetworks {
                     if (e.from == State.I) {
                         nI--;
                     }
+                    if (e.to == State.T) {
+                        totalTraced++;
+                    }
                     if (e.to == State.I) {
                         nI++;
                         totalInfected++;
                     }
-                    l.statusAtTime(e.time, nI, totalInfected);
+                    l.statusAtTime(e.time, nI, totalInfected, totalTraced);
                 }
                 l.endIter();
                 System.err.println("   Result: " + totalInfected + " total infected persons over time.");
