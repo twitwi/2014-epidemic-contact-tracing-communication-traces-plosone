@@ -163,6 +163,7 @@ public class AppTwoNetworks {
                 int nI = 1;
                 int totalInfected = 1;
                 int totalTraced = 0;
+                int nTotalRemoved = 0;
                 Simulation<State> simu1 = new Simulation(network, transitions);
                 Simulation<State> simu2 = new Simulation(knownNetwork, tracingTransitions);
                 while (true) {
@@ -195,7 +196,10 @@ public class AppTwoNetworks {
                         nI++;
                         totalInfected++;
                     }
-                    l.statusAtTime(e.time, nI, totalInfected, totalTraced);
+                    if (e.to == State.R) {
+                        nTotalRemoved++;
+                    }
+                    l.statusAtTime(e.time, nI, totalInfected, totalTraced, nTotalRemoved);
                 }
                 l.endIter();
                 System.err.println("   Result: " + totalInfected + " total infected persons over time.");
