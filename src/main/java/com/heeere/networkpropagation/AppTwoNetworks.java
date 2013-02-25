@@ -164,6 +164,8 @@ public class AppTwoNetworks {
                 int totalInfected = 1;
                 int totalTraced = 0;
                 int nTotalRemoved = 0;
+                double tracingEffortRandom = -1;
+                double tracingEffortContact = -1;
                 Simulation<State> simu1 = new Simulation(network, transitions);
                 Simulation<State> simu2 = new Simulation(knownNetwork, tracingTransitions);
                 while (true) {
@@ -199,7 +201,19 @@ public class AppTwoNetworks {
                     if (e.to == State.R) {
                         nTotalRemoved++;
                     }
-                    l.statusAtTime(e.time, nI, totalInfected, totalTraced, nTotalRemoved);
+                    { // compute tracing efforts
+                        tracingEffortRandom = p.betaRandom * (p.netSize - totalTraced); // netsize - totalTraced => #S + #I
+                        tracingEffortContact = 0;
+                        NetworkWithNeighboringStateCount<State> known = simu2.network;
+                        for (Node node : known.nodes) {
+                            State state = known.currentState(node);
+                            if (state == State.S || state == State.I) { // only S and I can be decently contact traced
+                                tracingEffortContact += known.countNeighbors(node, State.I);
+                            }
+                        }
+                        tracingEffortContact *= p.betaTraced;
+                    }
+                    l.statusAtTime(e.time, nI, totalInfected, totalTraced, nTotalRemoved, tracingEffortRandom, tracingEffortContact);
                 }
                 l.endIter();
                 System.err.println("   Result: " + totalInfected + " total infected persons over time.");

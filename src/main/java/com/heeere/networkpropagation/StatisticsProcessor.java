@@ -22,13 +22,17 @@ class StatisticsProcessor {
         final int nTotalInfected;
         final int nTotalTraced;
         final int nTotalRemoved;
+        final double tracingEffortRandom;
+        final double tracingEffortContact;
 
-        public Event(double time, int nInfected, int nTotalInfected, int nTotalTraced, int nTotalRemoved) {
+        public Event(double time, int nInfected, int nTotalInfected, int nTotalTraced, int nTotalRemoved, double tracingEffortRandom, double tracingEffortContact) {
             this.time = time;
             this.nInfected = nInfected;
             this.nTotalInfected = nTotalInfected;
             this.nTotalTraced = nTotalTraced;
             this.nTotalRemoved = nTotalRemoved;
+            this.tracingEffortRandom = tracingEffortRandom;
+            this.tracingEffortContact = tracingEffortContact;
         }
     }
     private ArrayList<Event> elementPairs;
@@ -40,8 +44,8 @@ class StatisticsProcessor {
         elementPairs = new ArrayList<Event>();
     }
 
-    public void statusAtTime(double time, int nI, int totalInfected, int totalTraced, int nTotalRemoved) {
-        elementPairs.add(new Event(time, nI, totalInfected, totalTraced, nTotalRemoved));
+    public void statusAtTime(double time, int nI, int totalInfected, int totalTraced, int nTotalRemoved, double tracingEffortRandom, double tracingEffortContact) {
+        elementPairs.add(new Event(time, nI, totalInfected, totalTraced, nTotalRemoved, tracingEffortRandom, tracingEffortContact));
     }
 
     public void endIter() {
@@ -57,7 +61,7 @@ class StatisticsProcessor {
         int split = 1000;
 
         double averageMax = 0;
-        final double[][] average = new double[5][split]; // time nInfected nTotalInfected nTotalTraced nTotalRemoved
+        final double[][] average = new double[7][split]; // time nInfected nTotalInfected nTotalTraced nTotalRemoved effortRandom effortContact
         for (int i = 0; i < split; i++) {
             average[0][i] = maxTime * i / split;
         }
@@ -75,6 +79,8 @@ class StatisticsProcessor {
                 average[2][j] += ser.get(serI - 1).nTotalInfected;
                 average[3][j] += ser.get(serI - 1).nTotalTraced;
                 average[4][j] += ser.get(serI - 1).nTotalRemoved;
+                average[5][j] += ser.get(serI - 1).tracingEffortRandom;
+                average[6][j] += ser.get(serI - 1).tracingEffortContact;
             }
             averageMax += thisMax;
         }
@@ -83,6 +89,8 @@ class StatisticsProcessor {
             average[2][j] /= seriesToSum.size();
             average[3][j] /= seriesToSum.size();
             average[4][j] /= seriesToSum.size();
+            average[5][j] /= seriesToSum.size();
+            average[6][j] /= seriesToSum.size();
             averageMax /= seriesToSum.size();
         }
 
@@ -111,6 +119,24 @@ class StatisticsProcessor {
         out.format("average-total-removed %g %d", maxTime, split);
         for (int j = 0; j < split; j++) {
             out.format(" %g", average[4][j]);
+        }
+        out.println();
+
+        out.format("average-effort-random %g %d", maxTime, split);
+        for (int j = 0; j < split; j++) {
+            out.format(" %g", average[5][j]);
+        }
+        out.println();
+
+        out.format("average-effort-contact %g %d", maxTime, split);
+        for (int j = 0; j < split; j++) {
+            out.format(" %g", average[6][j]);
+        }
+        out.println();
+
+        out.format("average-effort-total %g %d", maxTime, split);
+        for (int j = 0; j < split; j++) {
+            out.format(" %g", average[5][j] + average[6][j]);
         }
         out.println();
 
