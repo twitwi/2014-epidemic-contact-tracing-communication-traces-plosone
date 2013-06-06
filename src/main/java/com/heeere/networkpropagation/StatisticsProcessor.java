@@ -61,6 +61,8 @@ class StatisticsProcessor {
         int split = 1000;
 
         double averageMax = 0;
+        double averageTimeOfMax = 0;
+        double averageOverallInfected = 0;
         final double[][] average = new double[7][split]; // time nInfected nTotalInfected nTotalTraced nTotalRemoved effortRandom effortContact
         for (int i = 0; i < split; i++) {
             average[0][i] = maxTime * i / split;
@@ -68,11 +70,9 @@ class StatisticsProcessor {
 
         for (int i = 0; i < seriesToSum.size(); i++) {
             ArrayList<Event> ser = seriesToSum.get(i);
-            double thisMax = ser.get(0).nInfected;
             int serI = 1;
             for (int j = 0; j < average[0].length; j++) {
                 while (average[0][j] > ser.get(serI).time && serI < ser.size() - 1) {
-                    thisMax = Math.max(thisMax, ser.get(serI).nInfected);
                     serI++;
                 }
                 average[1][j] += ser.get(serI - 1).nInfected;
@@ -82,7 +82,17 @@ class StatisticsProcessor {
                 average[5][j] += ser.get(serI - 1).tracingEffortRandom;
                 average[6][j] += ser.get(serI - 1).tracingEffortContact;
             }
+            double thisMax = ser.get(0).nInfected;
+            double thisTimeOfMax = ser.get(0).time;
+            for (Event event : ser) {
+                if (thisMax < event.nInfected) {
+                    thisMax = event.nInfected;
+                    thisTimeOfMax = event.time;
+                }
+            }
             averageMax += thisMax;
+            averageTimeOfMax += thisTimeOfMax;
+            averageOverallInfected += ser.get(ser.size() - 1).nTotalInfected;
         }
         for (int j = 0; j < average[0].length; j++) {
             average[1][j] /= seriesToSum.size();
@@ -91,8 +101,10 @@ class StatisticsProcessor {
             average[4][j] /= seriesToSum.size();
             average[5][j] /= seriesToSum.size();
             average[6][j] /= seriesToSum.size();
-            averageMax /= seriesToSum.size();
         }
+        averageMax /= seriesToSum.size();
+        averageTimeOfMax /= seriesToSum.size();
+        averageOverallInfected /= seriesToSum.size();
 
         seriesToSum.clear();
 
@@ -103,6 +115,8 @@ class StatisticsProcessor {
         out.println();
 
         out.format("average-max-infected %g%n", averageMax);
+        out.format("average-time-of-max-infected %g%n", averageTimeOfMax);
+        out.format("average-overall-infected %g%n", averageOverallInfected);
 
         out.format("average-total-infected %g %d", maxTime, split);
         for (int j = 0; j < split; j++) {
