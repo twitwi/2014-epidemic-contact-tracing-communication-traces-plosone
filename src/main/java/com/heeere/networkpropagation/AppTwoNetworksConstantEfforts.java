@@ -1,6 +1,5 @@
 package com.heeere.networkpropagation;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,37 +12,27 @@ import java.util.Random;
  * Hello world!
  *
  */
-public class AppTwoNetworks {
+public class AppTwoNetworksConstantEfforts {
 
     public static enum State {
 
         S, I, R, T
     }
 
-    public static class Parameters {
+    public static class Parameters extends AppTwoNetworks.Parameters {
 
-        final double alpha;
-        final double betaRandom;
-        final double betaTraced;
-        final double gamma;
-        final int netSize;
-        final double averageNeighborCount;
-        final double averageNeighborCountToAdd; // addition
-        final double averageNeighborCountToRemove; // removal
-        final int nNetwork;
-        final int nInitializationsPerNetwork;
+        final double targetTracingEffortRandom;
+        final double targetTracingEffortContact;
+        
 
-        public Parameters(double alpha, double betaRandom, double betaTraced, double gamma, int netSize, double averageNeighborCount, double averageNeighborCountToAdd, double averageNeighborCountToRemove, int nNetwork, int nInitializationsPerNetwork) {
-            this.alpha = alpha;
-            this.betaRandom = betaRandom;
-            this.betaTraced = betaTraced;
-            this.gamma = gamma;
-            this.netSize = netSize;
-            this.averageNeighborCount = averageNeighborCount;
-            this.averageNeighborCountToAdd = averageNeighborCountToAdd;
-            this.averageNeighborCountToRemove = averageNeighborCountToRemove;
-            this.nNetwork = nNetwork;
-            this.nInitializationsPerNetwork = nInitializationsPerNetwork;
+        public Parameters(double alpha, double betaRandom, double betaTraced, double gamma, int netSize, double averageNeighborCount, double averageNeighborCountToAdd, double averageNeighborCountToRemove, int nNetwork, int nInitializationsPerNetwork, double targetTracingEffortRandom, double targetTracingEffortContact) {
+            super(alpha, betaRandom, betaTraced, gamma, netSize, averageNeighborCount, averageNeighborCountToAdd, averageNeighborCountToRemove, nNetwork, nInitializationsPerNetwork);
+            this.targetTracingEffortRandom = targetTracingEffortRandom;
+            this.targetTracingEffortContact = targetTracingEffortContact;
+        }
+
+        private Parameters updatingBetas(double newBetaRandom, double newBetaContact) {
+            return new Parameters(alpha, newBetaRandom, newBetaContact, gamma, netSize, averageNeighborCount, averageNeighborCountToAdd, averageNeighborCountToRemove, nNetwork, nInitializationsPerNetwork, targetTracingEffortRandom, targetTracingEffortContact);
         }
     }
 
@@ -52,13 +41,13 @@ public class AppTwoNetworks {
             mainHardCoded(args);
             return;
         }
-        if (args.length != 10) {
-            System.err.println("Expected 10 parameters exactly");
+        if (args.length != 12) {
+            System.err.println("Expected 12 parameters exactly");
             return;
         }
         ParameterReader r = new ParameterReader(args);
         Parameters p = new Parameters(
-                r.d(), r.d(), r.d(), r.d(), r.i(), r.d(), r.d(), r.d(), r.i(), r.i());
+                r.d(), r.d(), r.d(), r.d(), r.i(), r.d(), r.d(), r.d(), r.i(), r.i(), r.d(), r.d());
         doIt(p, true);
     }
 
@@ -70,12 +59,14 @@ public class AppTwoNetworks {
         final double gamma = .5;
         final int netSize = 1000;
         final double averageNeighborCount = 10;
-        final double averageNeighborCountToAdd = 0; // addition
-        final double averageNeighborCountToRemove = 0; // removal
-        final int nNetwork = 10;
-        final int nIterations = 20;
+        final double averageNeighborCountToAdd = 5; // addition
+        final double averageNeighborCountToRemove = 5; // removal
+        final int nNetwork = 1;
+        final int nIterations = 1;
+        final double constantEffortRandom = 90;
+        final double constantEffortTracing = 110;
 
-        Parameters p = new Parameters(alpha, betaRandom, betaTraced, gamma, netSize, averageNeighborCount, averageNeighborCountToAdd, averageNeighborCountToRemove, nNetwork, nIterations);
+        Parameters p = new Parameters(alpha, betaRandom, betaTraced, gamma, netSize, averageNeighborCount, averageNeighborCountToAdd, averageNeighborCountToRemove, nNetwork, nIterations, constantEffortRandom, constantEffortTracing);
         doIt(p, true);
 
     }
@@ -148,7 +139,8 @@ public class AppTwoNetworks {
             //p.addTransition(State.I, State.R, Distributions.<State>exp());
 
             TransitionParameters<State> tracingTransitions = new TransitionParameters(State.class);
-            TimeToTransitionDrawer<State> tracing = Distributions.expFactorBasePlusLambdaTimesCount(p.betaRandom, p.betaTraced, State.T);
+            
+            Distributions.ModifiableExpFactorBasePlusLambdaTimesCount<State> tracing = Distributions.modifiableExpFactorBasePlusLambdaTimesCount(p.betaRandom, p.betaTraced, State.T);
             tracingTransitions.addTransition(State.I, State.T, tracing);
             TimeToTransitionDrawer<State> removing = Distributions.exp(p.gamma);
             tracingTransitions.addTransition(State.T, State.R, removing);
@@ -164,12 +156,48 @@ public class AppTwoNetworks {
                 int totalInfected = 1;
                 int totalTraced = 0;
                 int nTotalRemoved = 0;
-                double tracingEffortRandom = -1;
-                double tracingEffortContact = -1;
+                double tracingEffortRandom; // actual, not target ones
+                double tracingEffortContact; // actual, not target ones
                 Simulation<State> simu1 = new Simulation(network, transitions);
                 Simulation<State> simu2 = new Simulation(knownNetwork, tracingTransitions);
                 while (true) {
+                    { // set the betas to get the desired tracing efforts
+                        int nRandomable = p.netSize - totalTraced;
+                        int nTraceable = 0;
+                        NetworkWithNeighboringStateCount<State> known = simu2.network;
+                        for (Node node : known.nodes) {
+                            State state = known.currentState(node);
+                            if (state == State.S || state == State.I) { // only S and I can be decently contact traced
+                                nTraceable += known.countNeighbors(node, State.T);
+                            }
+                        }
+                        double newBetaRandom = p.targetTracingEffortRandom / nRandomable;
+                        double newBetaContact = p.targetTracingEffortContact / nTraceable;
+                        if (nTraceable == 0) {
+                            newBetaContact = 0;
+                            newBetaRandom *= (p.targetTracingEffortRandom + p.targetTracingEffortContact) / p.targetTracingEffortRandom; // compensate to get constant total tracing
+                        }
+                        if (nRandomable == 0) {
+                            newBetaRandom = 0;
+                            newBetaContact *= (p.targetTracingEffortRandom + p.targetTracingEffortContact) / p.targetTracingEffortContact;// compensate
+                        }
+                        p = p.updatingBetas(newBetaRandom, newBetaContact);
+                        tracing.setBase(newBetaRandom);
+                        tracing.setLambda(newBetaContact);
+                    }
                     //System.out.println(nI + " infected persons at time " + simu.getTime());
+                    { // compute tracing efforts (kind of check as it should be almost constant (network changed a little since we set the betas))
+                        tracingEffortRandom = p.betaRandom * (p.netSize - totalTraced); // netsize - totalTraced => #S + #I
+                        tracingEffortContact = 0;
+                        NetworkWithNeighboringStateCount<State> known = simu2.network;
+                        for (Node node : known.nodes) {
+                            State state = known.currentState(node);
+                            if (state == State.S || state == State.I) { // only S and I can be decently contact traced
+                                tracingEffortContact += known.countNeighbors(node, State.T);
+                            }
+                        }
+                        tracingEffortContact *= p.betaTraced;
+                    }
                     Event e;
                     {
                         Event e1 = simu1.getNextEvent();
@@ -200,18 +228,6 @@ public class AppTwoNetworks {
                     }
                     if (e.to == State.R) {
                         nTotalRemoved++;
-                    }
-                    { // compute tracing efforts
-                        tracingEffortRandom = p.betaRandom * (p.netSize - totalTraced); // netsize - totalTraced => #S + #I
-                        tracingEffortContact = 0;
-                        NetworkWithNeighboringStateCount<State> known = simu2.network;
-                        for (Node node : known.nodes) {
-                            State state = known.currentState(node);
-                            if (state == State.S || state == State.I) { // only S and I can be decently contact traced
-                                tracingEffortContact += known.countNeighbors(node, State.T);
-                            }
-                        }
-                        tracingEffortContact *= p.betaTraced;
                     }
                     l.statusAtTime(e.time, nI, totalInfected, totalTraced, nTotalRemoved, tracingEffortRandom, tracingEffortContact);
                 }

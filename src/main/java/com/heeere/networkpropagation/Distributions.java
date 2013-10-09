@@ -36,6 +36,38 @@ public class Distributions {
         };
     }
 
+    
+    public static class ModifiableExpFactorBasePlusLambdaTimesCount<S extends Enum<S>> implements TimeToTransitionDrawer<S> {
+        double base;
+        double lambda;
+        S s;
+
+        public ModifiableExpFactorBasePlusLambdaTimesCount(double base, double lambda, S s) {
+            this.base = base;
+            this.lambda = lambda;
+            this.s = s;
+        }
+
+        public void setBase(double base) {
+            this.base = base;
+        }
+
+        public void setLambda(double lambda) {
+            this.lambda = lambda;
+        }
+        
+        @Override
+        public double drawTime(NetworkWithNeighboringStateCount<S> net, Node n) {
+            // TODO: could use or reuse a faster algorithm
+            double expParameter = base + lambda * net.countNeighbors(n, s);
+            // TODO: use a controlled random (seeded manually)
+            return drawExponential(expParameter);
+        }
+    }
+    public static <S extends Enum<S>> ModifiableExpFactorBasePlusLambdaTimesCount<S> modifiableExpFactorBasePlusLambdaTimesCount(final double base, final double lambda, final S s) {
+        return new ModifiableExpFactorBasePlusLambdaTimesCount(base, lambda, s);
+    }
+    
     public static <S extends Enum<S>> TimeToTransitionDrawer<S> exp(final double lambda) {
         return new TimeToTransitionDrawer<S>() {
 
