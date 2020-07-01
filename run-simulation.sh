@@ -2,6 +2,8 @@
 
 # This was a script to run simulations on a cluster so it might be overcomplicated for the simple case.
 
+export LANG=US
+
 function build() {
     mvn -Dmaven.test.skip=true install dependency:copy-dependencies
 }

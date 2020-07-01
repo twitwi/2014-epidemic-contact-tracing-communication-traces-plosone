@@ -2,6 +2,8 @@
 
 # this is an example of code to plot the graphs (among so many)... we would probably do it differently today (python and numpy?)
 
+export LANG=US
+
 function differentiate() {
     awk 'BEGIN {prev=0} {print $1-prev; prev = $1;}'
 }
